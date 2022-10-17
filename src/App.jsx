@@ -1,5 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
+
+import {
+  Button,
+  Grid,
+  TextField,
+} from '@mui/material';
 
 import './App.css';
 import Chat from './Chat';
@@ -8,28 +14,58 @@ const SERVERLOCATION = 'https://r4k674.sse.codesandbox.io';
 
 function App() {
   const [chatToken, setChatToken] = useState();
+  const [userName, setUserName] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const getChatToken = async () => {
+  const getChatToken = async () => {
+    setLoading(true);
 
-      //TODO generate this
-      const memberId = 'user1';
-      const channels = ['mychannel1'];
+    const memberId = userName.replace(/[^a-z0-9]+/g, '_');
 
-      const reply = await axios.post(SERVERLOCATION + "/get_chat_token", {
-        member_id: 'member_id',
-        channels: ['mychannel1'],
-      });
-      const token = reply.data.token;
-      setChatToken(token);
-    }
-    getChatToken();
-  }, []);
+    const reply = await axios.post(SERVERLOCATION + "/get_chat_token", {
+      member_id: memberId,
+      channels: ['main', 'service'],
+    });
+    const token = reply.data.token;
+    setChatToken(token);
+    setLoading(false);
+  }
+
+  const reset = () => {
+    setChatToken(null);
+  }
 
   return (
     <div className="App">
       <h1>Non-Persistent Chat</h1>
-      <Chat chatToken={chatToken}  />
+      {!chatToken ?
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              id="username"
+              label="User Name"
+              variant="outlined"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              variant='contained'
+              disabled={!userName || loading}
+              onClick={getChatToken}
+            >
+              {loading ? 'Joining...' : 'Join'}
+            </Button>
+          </Grid>
+        </Grid>
+        :
+        <Chat
+          chatToken={chatToken}
+          reset={reset}
+          userName={userName}
+        />
+      }
     </div>
   )
 }

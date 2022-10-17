@@ -9,6 +9,10 @@ Inspired by Christian Stuff's [talk at CommCon21](https://2021.commcon.xyz/talks
 
 I'm not at all sure whether this is going to work.
 
+The API provides chat history with `chatClient.getMessages()`, but we're not using that.
+
 
 ### Back-end
 Running on codesandbox.io with API credentials.
+
+
