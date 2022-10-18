@@ -13,6 +13,12 @@ The API provides chat history with `chatClient.getMessages()`, but we're not usi
 
 
 ### Back-end
-Running on codesandbox.io with API credentials.
+Running on codesandbox.io with API credentials. The example back-end on the SignalWire docs doesn't seem to work -- fork the codesandbox project and set the URL as an env variable.
+
+
+### Usage
+Run `vite` to run the app in development, or `vite build` to build it. In the UI, insert a user name and join the chat. If there are other users in the room, the app will poll a random participant, who will broadcast their chat history object to all participants. This way, all participants always see the same history.
+
+The whole chat history exists as a state variable in the participants' front-ends. When the last participant leaves the room, all history is gone.
 
 

@@ -10,7 +10,7 @@ import {
 import './App.css';
 import Chat from './Chat';
 
-const SERVERLOCATION = 'https://r4k674.sse.codesandbox.io';
+const SERVERLOCATION = import.meta.env.VITE_SERVERLOCATION;
 
 function App() {
   const [chatToken, setChatToken] = useState();
