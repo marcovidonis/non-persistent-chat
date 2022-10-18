@@ -95,8 +95,7 @@ function Chat(props) {
     //get history from a random member other than self
     const otherMembers = members.filter((m) => m.id !== userName);
     const randIdx = Math.floor(Math.random() * otherMembers.length);
-    // sendMessage({ channel: 'service', content: otherMembers[randIdx].id });
-    sendMessage({ channel: 'service', content: '333' }); //TEST
+    sendMessage({ channel: 'service', content: otherMembers[randIdx].id });
 
     setLoading(false);
   }, [needHistory]);
@@ -106,9 +105,15 @@ function Chat(props) {
       return;
     }
 
-    const m = await chatClient.getMembers({ channel: 'main' });
-    // console.log(m);
-    setMembers(m.members)
+    try {
+      const m = await chatClient.getMembers({ channel: 'main' });
+      console.log(m);
+      setMembers(m.members);
+    } catch (error) {
+      if (subscribed) {
+        console.error(error);
+      }
+    }
 
     if (loading) {
       setNeedHistory(true);
@@ -137,11 +142,22 @@ function Chat(props) {
     setMessage('');
   }
 
-  const exitChat = () => {
+  const unsubscribe = async () => {
+    if (!chatClient) {
+      setSubscribed(false);
+      return;
+    }
+
+    await chatClient.unsubscribe(['main', 'service']);
+    setSubscribed(false);
+  }
+
+  const exitChat = async () => {
     if (!chatClient) {
       return;
     }
 
+    await unsubscribe();
     chatClient.disconnect();
     setChatClient(null);
     props.reset();
