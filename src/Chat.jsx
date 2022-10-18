@@ -15,9 +15,11 @@ function Chat(props) {
   const [loading, setLoading] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [message, setMessage] = useState('');
+  const [newMessage, setNewMessage] = useState();
   const [chatClient, setChatClient] = useState();
   const [members, setMembers] = useState([]);
   const [needHistory, setNeedHistory] = useState(false);
+  const [histRequest, setHistRequest] = useState(false);
 
   const { chatToken, userName } = props;
 
@@ -36,43 +38,6 @@ function Chat(props) {
     if (!chatClient) {
       return;
     }
-
-    const subscribe = async () => {
-      chatClient.on("message", (message) => {
-        console.log("Received", message);
-        if (message.channel === 'main') {
-          history.push(message);
-          setHistory([...history]);
-        } else if (message.channel === 'service') {
-          //if we are polled for history, share it with everyone
-          if (message.content === userName) {
-            sendMessage({ channel: 'service', content: JSON.stringify(history) });
-          } else {
-            //if we are shared history, replace the one we have
-            const newHistory = JSON.parse(message.content);
-            if (Array.isArray(newHistory)) {
-              console.log('got new history', newHistory);
-              setHistory([...newHistory]);
-            }
-          }
-        }
-      });
-
-      chatClient.on("member.joined", (member) => {
-        getMembers();
-        // console.log('joined event', member);
-      });
-
-      chatClient.on("member.left", (member) => {
-        getMembers();
-        // console.log('left event', member);
-      });
-
-      await chatClient.subscribe(['main', 'service']);
-      setSubscribed(true);
-      console.log('subscribed');
-    }
-
     subscribe();
   }, [chatClient]);
 
@@ -100,6 +65,30 @@ function Chat(props) {
     setLoading(false);
   }, [needHistory]);
 
+  useEffect(() => {
+    if (newMessage) {
+      if (Array.isArray(newMessage)) {
+        setHistory(newMessage);
+      } else {
+        const newHistory = [...history];
+
+        newHistory.push(newMessage);
+        setHistory(newHistory);
+      }
+      setNewMessage(null);
+    }
+  }, [newMessage]);
+
+  useEffect(() => {
+    if (!histRequest) {
+      return;
+    }
+
+    sendMessage({ channel: 'service', content: JSON.stringify(history) });
+
+    setHistRequest(false);
+  }, [histRequest]);
+
   const getMembers = async () => {
     if (!chatClient) {
       return;
@@ -107,7 +96,6 @@ function Chat(props) {
 
     try {
       const m = await chatClient.getMembers({ channel: 'main' });
-      console.log(m);
       setMembers(m.members);
     } catch (error) {
       if (subscribed) {
@@ -121,8 +109,6 @@ function Chat(props) {
   }
 
   const sendMessage = async ({ channel, content }) => {
-    console.log('sending', channel, content);
-
     if (!channel) {
       channel = 'main';
     }
@@ -140,6 +126,39 @@ function Chat(props) {
     });
 
     setMessage('');
+  }
+
+  const subscribe = async () => {
+    chatClient.on("message", (message) => {
+      if (message.channel === 'main') {
+        setNewMessage(message);
+      } else if (message.channel === 'service') {
+        //if we are polled for history, share it with everyone
+        if (message.content === userName) {
+          setHistRequest(true);
+        } else {
+          //if we are sent a history, replace the one we have
+          const newHistory = JSON.parse(message.content);
+          if (Array.isArray(newHistory)) {
+            setNewMessage(newHistory);
+          }
+        }
+      }
+    });
+
+    chatClient.on("member.joined", (member) => {
+      getMembers();
+      // console.log('joined event', member);
+    });
+
+    chatClient.on("member.left", (member) => {
+      getMembers();
+      // console.log('left event', member);
+    });
+
+    await chatClient.subscribe(['main', 'service']);
+    setSubscribed(true);
+    console.log('subscribed');
   }
 
   const unsubscribe = async () => {
