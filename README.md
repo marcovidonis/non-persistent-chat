@@ -7,8 +7,6 @@ Inspired by Christian Stuff's [talk at CommCon21](https://2021.commcon.xyz/talks
 - New users receive the chat history automatically when they join
 - When the session ends, chat history is gone
 
-I'm not at all sure whether this is going to work.
-
 The API provides chat history with `chatClient.getMessages()`, but we're not using that.
 
 
