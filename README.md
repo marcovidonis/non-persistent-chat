@@ -20,3 +20,5 @@ Run `vite` to run the app in development, or `vite build` to build it. In the UI
 The whole chat history exists as a state variable in the participants' front-ends. When the last participant leaves the room, all history is gone.
 
 
+### Licence
+GNU LGPLv3
